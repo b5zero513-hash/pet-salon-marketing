@@ -1,10 +1,24 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { KeyboardEvent } from 'react'
 import { ArrowDown, ArrowRight, Check, ChevronDown, Clipboard, Heart, Instagram, MessageCircle, PawPrint, RotateCcw, Sparkles, Store, Ticket, Megaphone, Printer } from 'lucide-react'
 import { generateCopy, getFormErrors } from './lib/generate'
 import { sampleForm } from './sample'
 import { channels, type Channel, type CopySet, type SalonForm } from './types'
 
 const blankForm: SalonForm = Object.fromEntries(Object.keys(sampleForm).map((key) => [key, ''])) as unknown as SalonForm
+
+type ProductView = 'demo' | 'dashboard' | 'specs' | 'diagram'
+const productViews: { id: ProductView; label: string }[] = [
+  { id: 'demo', label: '動くデモ' },
+  { id: 'dashboard', label: 'ダッシュボード' },
+  { id: 'specs', label: '仕様書' },
+  { id: 'diagram', label: '図解' },
+]
+
+function readProductView(): ProductView {
+  const view = window.location.hash.replace(/^#\/?/, '').split('/')[0]
+  return productViews.some((item) => item.id === view) ? view as ProductView : 'demo'
+}
 
 const fieldGroups = [
   {
@@ -38,12 +52,38 @@ const fieldGroups = [
 ] as const
 
 function App() {
+  const [activeView, setActiveView] = useState<ProductView>(readProductView)
   const [form, setForm] = useState<SalonForm>(sampleForm)
   const [selected, setSelected] = useState<Channel[]>(['instagram', 'line', 'flyer'])
   const [result, setResult] = useState<CopySet>(() => generateCopy(sampleForm))
   const [errors, setErrors] = useState<Partial<Record<keyof SalonForm, string>>>({})
   const [notice, setNotice] = useState('')
   const resultsRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const syncView = () => setActiveView(readProductView())
+    window.addEventListener('hashchange', syncView)
+    window.addEventListener('popstate', syncView)
+    return () => {
+      window.removeEventListener('hashchange', syncView)
+      window.removeEventListener('popstate', syncView)
+    }
+  }, [])
+
+  const selectView = (view: ProductView) => {
+    if (readProductView() !== view) window.history.pushState(null, '', `#${view}`)
+    setActiveView(view)
+  }
+
+  const handleViewKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+    event.preventDefault()
+    const index = productViews.findIndex((item) => item.id === activeView)
+    const nextIndex = event.key === 'Home' ? 0 : event.key === 'End' ? productViews.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : productViews.length - 1)) % productViews.length
+    const next = productViews[nextIndex].id
+    selectView(next)
+    window.requestAnimationFrame(() => document.getElementById(`product-tab-${next}`)?.focus())
+  }
 
   const selectedLabels = useMemo(() => channels.filter((channel) => selected.includes(channel.id)), [selected])
 
@@ -121,16 +161,24 @@ function App() {
   const editResult = (key: keyof CopySet, value: string) => setResult((current) => ({ ...current, [key]: value }))
 
   return (
-    <div className="app-shell">
-      <header className="topbar">
-        <a href="#top" className="brand" aria-label="Salon Letter ホーム">
+    <div className="app-shell product-shell">
+      <header className="product-header">
+        <a href="#demo" className="product-back" onClick={() => selectView('demo')}><ArrowDown size={15} /> 商品一覧へ</a>
+        <a href="#demo" className="brand product-brand" aria-label="Salon Letter 商品ページ">
           <span className="brand-mark"><PawPrint size={21} strokeWidth={2.4} /></span>
-          <span>salon letter<span className="brand-dot">.</span></span>
+          <span><small>ペットサロン販促文づくり</small>salon letter<span className="brand-dot">.</span></span>
         </a>
-        <div className="topbar-right"><span className="demo-pill"><span /> デモ版</span><a className="top-link" href="#how-it-works">使い方 <ArrowDown size={15} /></a></div>
+        <div className="product-price"><span>料金</span><strong>未定</strong></div>
       </header>
+      <nav className="product-nav" aria-label="商品情報">
+        <div role="tablist" aria-label="商品ページの画面" onKeyDown={handleViewKeyDown}>
+          {productViews.map((view) => <button key={view.id} id={`product-tab-${view.id}`} type="button" role="tab" aria-selected={activeView === view.id} aria-controls={`product-panel-${view.id}`} tabIndex={activeView === view.id ? 0 : -1} className={activeView === view.id ? 'is-active' : ''} onClick={() => selectView(view.id)}>{view.label}</button>)}
+        </div>
+        <span className="product-nav-note">お店の情報から媒体別の販促原稿を作成</span>
+      </nav>
 
       <main id="top">
+        <div id="product-panel-demo" role="tabpanel" aria-labelledby="product-tab-demo" hidden={activeView !== 'demo'} className="product-panel demo-panel">
         <section className="hero">
           <div className="hero-copy">
             <div className="eyebrow"><span className="eyebrow-line" />PET SALON PROMOTION TOOL</div>
@@ -248,9 +296,53 @@ function App() {
         </section>
 
         <section className="closing-note"><div className="closing-paw"><PawPrint size={28} /></div><div><span>MADE FOR YOUR NEIGHBORHOOD</span><h2>いつものお客様にも、<br />これから出会うお客様にも。</h2></div><p>小さなお店の毎日に、<br />伝える時間を少しだけ。</p></section>
+        </div>
+
+        <section id="product-panel-dashboard" role="tabpanel" aria-labelledby="product-tab-dashboard" hidden={activeView !== 'dashboard'} className="product-panel product-dashboard">
+          <div className="product-view-intro"><div className="eyebrow"><span className="eyebrow-line" />CAMPAIGN OVERVIEW · 架空サンプル</div><h1>販促セットを見渡す</h1><p>入力中・生成後の内容を媒体別に確認できます。サンプルは架空の店舗情報です。</p></div>
+          <section className="dashboard-campaign"><div className="dashboard-campaign-icon"><Ticket size={22} /></div><div><span>CAMPAIGN NAME</span><h2>{result.campaignName}</h2></div></section>
+          <section className="dashboard-summary"><div><span className="dashboard-section-kicker">PLAN SUMMARY</span><h2>企画概要</h2></div><pre>{result.summary}</pre></section>
+          <div className="dashboard-copy-grid">
+            {channels.map((channel) => {
+              const label = channel.id === 'flyer' ? 'チラシ原稿' : channel.label
+              return <article className={`dashboard-copy-card dashboard-${channel.id}`} key={channel.id}><div className="dashboard-copy-head"><div><span className="dashboard-section-kicker">{channel.id === 'instagram' ? 'SOCIAL POST' : channel.id === 'line' ? 'MESSAGE' : 'PRINT'}</span><h2>{label}</h2></div><span className="dashboard-live-tag">生成原稿</span></div><pre>{result[channel.id] || '動くデモで媒体を選択し、「販促セットを作る」を押すと原稿が表示されます。'}</pre></article>
+            })}
+          </div>
+          <div className="dashboard-footnote"><Check size={16} /><p><strong>サンプルは架空データです。</strong>表示するのは入力とテンプレートから作られた文案です。配信数や反応率などの分析値はありません。</p></div>
+        </section>
+
+        <section id="product-panel-specs" role="tabpanel" aria-labelledby="product-tab-specs" hidden={activeView !== 'specs'} className="product-panel product-specs">
+          <div className="product-view-intro"><div className="eyebrow"><span className="eyebrow-line" />PRODUCT DETAILS</div><h1>機能と利用範囲</h1><p>ペットサロン向け販促文づくりデモの入力、出力、データの扱いをまとめています。</p></div>
+          <section className="spec-card"><h2>入力項目</h2><div className="spec-table-wrap"><table className="spec-table"><thead><tr><th>区分</th><th>項目</th><th>必須・任意</th><th>用途</th></tr></thead><tbody>
+            <tr><td>お店</td><td>店舗名・エリア・主なサービス・特徴・届けたいお客様</td><td>必須</td><td>店舗紹介や対象者の表現に使用</td></tr>
+            <tr><td>お店</td><td>予約・問い合わせ先</td><td>任意</td><td>未入力なら予約方法の入力を促す</td></tr>
+            <tr><td>お店</td><td>雰囲気・文体</td><td>任意</td><td>文章のトーンに使用</td></tr>
+            <tr><td>企画</td><td>目的・サービス／特典</td><td>必須</td><td>キャンペーン名と原稿の中心内容</td></tr>
+            <tr><td>企画</td><td>料金・期間・対象条件・追加情報</td><td>任意</td><td>入力された事実だけを原稿へ反映</td></tr>
+            <tr><td>企画</td><td>発信媒体（Instagram・LINE・チラシ）</td><td>1媒体以上必須</td><td>生成結果カードの選択</td></tr>
+          </tbody></table></div></section>
+          <div className="spec-card-grid"><section className="spec-card"><h2>媒体別の出力内容</h2><ul><li><strong>Instagram：</strong>導入、サービス紹介、条件、予約案内、ハッシュタグ</li><li><strong>LINE：</strong>短い挨拶、特典・期間、予約案内</li><li><strong>チラシ：</strong>見出し、特典、店舗紹介、条件、予約先</li></ul></section>
+            <section className="spec-card"><h2>生成・編集</h2><p>ブラウザー内のルールベースのテンプレートでキャンペーン名・概要・媒体別原稿を作成します。生成後の文章は画面上で編集でき、カード単位でコピーできます。AI APIは使用しません。</p></section></div>
+          <section className="spec-card"><h2>データの扱いと対象外</h2><p>入力内容と文案はブラウザー内だけで処理します。サーバーへの送信、永続保存、SNS投稿、LINE配信、予約受付は行いません。ページを閉じると入力・編集内容は保持されません。利用前に店舗側で料金・期間・条件・予約先を確認してください。</p></section>
+          <p className="product-price-note">商品料金：未定（提供条件を確認中）</p>
+        </section>
+
+        <section id="product-panel-diagram" role="tabpanel" aria-labelledby="product-tab-diagram" hidden={activeView !== 'diagram'} className="product-panel product-diagram">
+          <div className="product-view-intro"><div className="eyebrow"><span className="eyebrow-line" />HOW IT WORKS</div><h1>入力から、使える原稿まで</h1><p>お店の情報と企画条件から、各媒体に合わせた下書きを作る流れです。</p></div>
+          <div className="promotion-flow" aria-label="店舗情報と企画条件を入力、必須項目確認、媒体別原稿生成、編集とコピー、店舗側で確認して利用する流れ">
+            {[
+              { n: '01', icon: <Store size={23} />, title: '店舗情報・企画条件を入力', text: 'お店の特徴、目的、特典などを入力' },
+              { n: '02', icon: <Check size={23} />, title: '必須項目を確認', text: '店舗情報と企画に必要な項目を確認' },
+              { n: '03', icon: <Megaphone size={23} />, title: '媒体別原稿を生成', text: 'Instagram・LINE・チラシ用に展開' },
+              { n: '04', icon: <Clipboard size={23} />, title: '編集・コピー', text: '文章を整え、必要な原稿をコピー' },
+              { n: '05', icon: <Heart size={23} />, title: '店舗側で確認して利用', text: '事実や条件を確認して手動で活用' },
+            ].map((step, index) => <div className="promotion-flow-item" key={step.n}><article><div className="promotion-flow-top"><span>{step.n}</span><b>{step.icon}</b></div><h2>{step.title}</h2><p>{step.text}</p></article>{index < 4 && <span className="promotion-flow-arrow" aria-hidden="true"><ArrowRight size={19} /></span>}</div>)}
+          </div>
+          <div className="flow-output"><span className="flow-output-mark"><Sparkles size={19} /></span><div><strong>3種類の編集可能な下書き</strong><p>入力内容に基づく原稿を表示します。自動投稿・自動配信は行いません。</p></div><div className="flow-channel-tags"><span>Instagram</span><span>LINE</span><span>チラシ</span></div></div>
+        </section>
       </main>
 
-      <footer className="footer"><a href="#top" className="brand footer-brand"><span className="brand-mark"><PawPrint size={18} /></span><span>salon letter<span className="brand-dot">.</span></span></a><span>ペットサロン向け販促文づくりデモ</span><span>DEMO · NOT A REAL BOOKING SERVICE</span></footer>
+      <footer className="footer product-footer"><a href="#demo" className="brand footer-brand" onClick={() => selectView('demo')}><span className="brand-mark"><PawPrint size={18} /></span><span>salon letter<span className="brand-dot">.</span></span></a><span>ペットサロン向け販促文づくりデモ</span><span>文案は確認・編集してからご利用ください</span></footer>
       <div className="sr-status" role="status" aria-live="polite">{notice}</div>
       {notice && <button className="toast" onClick={() => setNotice('')} aria-label="通知を閉じる"><Check size={17} />{notice}<span>×</span></button>}
     </div>
