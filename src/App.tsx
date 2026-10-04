@@ -168,7 +168,7 @@ function App() {
           <span className="brand-mark"><PawPrint size={21} strokeWidth={2.4} /></span>
           <span><small>SNS・LINE・チラシ文案作成</small>salon letter<span className="brand-dot">.</span></span>
         </a>
-        <div className="product-price"><div className="product-price-main"><span>基本料金</span><strong>60,000円〜（税別）</strong></div><p>基本料金です。機能追加・個別カスタマイズは別途お見積りとなります。</p><div className="product-price-links"><a href="https://apurihp-production-edf3.up.railway.app/?items=marketing-copy" target="_blank" rel="noreferrer">概算見積りを見る <ArrowRight size={14} /></a><a href="https://mirailab0924.com/production-contact/" target="_blank" rel="noreferrer">制作・カスタマイズについて相談する <ArrowRight size={14} /></a></div></div>
+        <div className="product-price" data-product-id="marketing-copy" data-product-name="SNS・LINE・チラシ文案作成"><div className="product-price-main"><span>基本料金</span><strong>60,000円（税別）</strong></div><p>基本料金です。機能追加・個別カスタマイズは別途お見積りとなります。</p><div className="product-price-links"><a href="https://apurihp-production-edf3.up.railway.app/?items=marketing-copy" target="_blank" rel="noreferrer">概算見積りを見る <ArrowRight size={14} /></a><a href="https://mirailab0924.com/production-contact/" target="_blank" rel="noreferrer">制作・カスタマイズについて相談する <ArrowRight size={14} /></a></div></div>
       </header>
       <nav className="product-nav" aria-label="商品情報">
         <div role="tablist" aria-label="商品ページの画面" onKeyDown={handleViewKeyDown}>
