@@ -166,9 +166,9 @@ function App() {
         <a href="#demo" className="product-back" onClick={() => selectView('demo')}><ArrowDown size={15} /> 商品一覧へ</a>
         <a href="#demo" className="brand product-brand" aria-label="Salon Letter 商品ページ">
           <span className="brand-mark"><PawPrint size={21} strokeWidth={2.4} /></span>
-          <span><small>ペットサロン販促文づくり</small>salon letter<span className="brand-dot">.</span></span>
+          <span><small>SNS・LINE・チラシ文案作成</small>salon letter<span className="brand-dot">.</span></span>
         </a>
-        <div className="product-price"><span>料金</span><strong>未定</strong></div>
+        <div className="product-price"><div className="product-price-main"><span>基本料金</span><strong>60,000円〜（税別）</strong></div><p>基本料金です。機能追加・個別カスタマイズは別途お見積りとなります。</p><div className="product-price-links"><a href="https://apurihp-production-edf3.up.railway.app/?items=marketing-copy" target="_blank" rel="noreferrer">概算見積りを見る <ArrowRight size={14} /></a><a href="https://mirailab0924.com/production-contact/" target="_blank" rel="noreferrer">制作・カスタマイズについて相談する <ArrowRight size={14} /></a></div></div>
       </header>
       <nav className="product-nav" aria-label="商品情報">
         <div role="tablist" aria-label="商品ページの画面" onKeyDown={handleViewKeyDown}>
@@ -324,7 +324,6 @@ function App() {
           <div className="spec-card-grid"><section className="spec-card"><h2>媒体別の出力内容</h2><ul><li><strong>Instagram：</strong>導入、サービス紹介、条件、予約案内、ハッシュタグ</li><li><strong>LINE：</strong>短い挨拶、特典・期間、予約案内</li><li><strong>チラシ：</strong>見出し、特典、店舗紹介、条件、予約先</li></ul></section>
             <section className="spec-card"><h2>生成・編集</h2><p>ブラウザー内のルールベースのテンプレートでキャンペーン名・概要・媒体別原稿を作成します。生成後の文章は画面上で編集でき、カード単位でコピーできます。AI APIは使用しません。</p></section></div>
           <section className="spec-card"><h2>データの扱いと対象外</h2><p>入力内容と文案はブラウザー内だけで処理します。サーバーへの送信、永続保存、SNS投稿、LINE配信、予約受付は行いません。ページを閉じると入力・編集内容は保持されません。利用前に店舗側で料金・期間・条件・予約先を確認してください。</p></section>
-          <p className="product-price-note">商品料金：未定（提供条件を確認中）</p>
         </section>
 
         <section id="product-panel-diagram" role="tabpanel" aria-labelledby="product-tab-diagram" hidden={activeView !== 'diagram'} className="product-panel product-diagram">
